@@ -1,0 +1,23 @@
+{
+  "name": "react-cms-back",
+  "version": "1.0.0",
+  "description": "Backend for the react cms app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/domingoacd/react-cms-back.git"
+  },
+  "author": "Domingo Cabeza",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/domingoacd/react-cms-back/issues"
+  },
+  "homepage": "https://github.com/domingoacd/react-cms-back#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
