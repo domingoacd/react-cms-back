@@ -1,66 +1,260 @@
-const { response } = require('express');
-const express = require('express');
-
+const express = require("express");
+const MongoClient = require("mongodb").MongoClient;
 const app = express();
+const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
 
 app.use(express.json());
+let database = null;
+ 
 
-const books = [
-    {title: 'Book 1', id: 1},
-    {title: 'Book 2', id: 2},
-    {title: 'Book 3', id: 3}
-];
+const options = {
+    definition: {
+      openapi: "3.0.0",
+      info: {
+        title: "LogRocket Express API with Swagger",
+        version: "0.1.0",
+        description:
+          "This is a simple CRUD API application made with Express and documented with Swagger",
+        license: {
+          name: "MIT",
+          url: "https://spdx.org/licenses/MIT.html",
+        },
+        contact: {
+          name: "LogRocket",
+          url: "https://logrocket.com",
+          email: "info@email.com",
+        },
+      },
+      servers: [
+        {
+          url: "http://localhost:8080/",
+        },
+      ],
+    },
+    apis: ["./index.js"],
+  };
+  
+const specs = swaggerJSDoc(options);
+  app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(specs)
+  );
 
-app.get('/', (req, res) => {
-    res.send('Welcome to your API!');
+  /**
+   *  @swagger
+   * /:
+   *  get:
+   *    summary: Root Get
+   *    description: This Api is used to check if get method is working or not
+   *    responses:
+   *      200:
+   *        description: To test Get Method
+   * 
+   */
+
+app.get("/", (req, resp) => {
+  resp.send("Your mongodb API");
 });
 
-app.get('/api/data', (req, res) => {
-    res.send(books);
+/**
+ * @swagger 
+ *  components:
+ *    schema:
+ *      Book:
+ *        type: object
+ *        properties:
+ *          _id:
+ *            type: string
+ *          id:
+ *            type: integer
+ *          title:
+ *            type: string 
+ */
+
+/**
+ * @swagger
+ * /api/data:
+ *  get:
+ *    summary: To get all books from MongoDB
+ *    description: This API fetchs all books data from mongodb
+ *    responses:
+ *      200:
+ *        description: This API fetchs all books data from mongodb
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                $ref: '#components/schema/Book' 
+ */
+app.get("/api/data", (req, resp) => {
+  database
+    .collection("books")
+    .find({})
+    .toArray((err, result) => {
+      if (err) {
+        throw err;
+      }
+      resp.send(result);
+    });
 });
 
-app.get('/api/data/:id', (req, res) => {
-    const book = books.find(book => book.id === parseInt(req.params.id));
+/**
+ * @swagger
+ * /api/data/{id}:
+ *  get:
+ *    summary: To get all books from MongoDB
+ *    description: This API fetchs all books data from mongodb
+ *    parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        description: Numeric ID required
+ *        schema:
+ *          type: integer
+ *    responses:
+ *      200:
+ *        description: This API fetchs a specific book data from mongodb
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                $ref: '#components/schema/Book' 
+ */
 
-    if (!book) {
-        res.status(404).send('Book not found');
+app.get("/api/data/:id", (req, resp) => {
+  database
+    .collection("books")
+    .find({ id: parseInt(req.params.id) })
+    .toArray((err, result) => {
+      if (err) {
+        throw err;
+      }
+
+      resp.send(result);
+    });
+});
+
+/**
+ * @swagger
+ * /api/data/{id}:
+ *  put:
+ *    summary: To update a book data in mongodb
+ *    description: Updates a book data
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#components/schema/Book'
+ *    parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        description: Numeric ID required
+ *        schema:
+ *          type: integer
+ *    responses:
+ *      200:
+ *        description: Book updated successfully
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                $ref: '#components/schema/Book' 
+ */
+
+app.put("/api/data/:id", (req, resp) => {
+  let query = { id: parseInt(req.params.id) };
+  let book = {
+    id: parseInt(req.params.id),
+    title: req.body.title,
+  };
+  let dataSet = {
+    $set: book,
+  };
+
+  database.collection("books").updateOne(query, dataSet, (err, result) => {
+    if (err) {
+      throw err;
     }
 
-    res.send(book);
+    resp.send(book);
+  });
 });
 
-app.post('/api/data/addBook', (req, res) => {
-    const book = {
+
+
+app.post("/api/data/addBook", (req, resp) => {
+  let lastItem = database
+    .collection("books")
+    .find({})
+    .sort({ id: -1 })
+    .limit(1);
+
+  lastItem.forEach((obj) => {
+    if (obj) {
+      let book = {
+        id: obj.id + 1,
         title: req.body.title,
-        id: books.length + 1,
-    };
+      };
 
-    books.push(book);
-    res.send(books);
-});
+      database.collection("books").insertOne(book, (err, result) => {
+        if (err) {
+          resp.status(500).send(err);
+        }
 
-app.put('/api/data/:id', (req, res) => {
-    const book = books.find(book => book.id === parseInt(req.params.id));
-
-    if (!book) {
-        res.status(404).send('book not found');
+        resp.send("Added succesfully");
+      });
     }
-
-    book.title = req.body.title;
-
-    res.send(books);
+  });
 });
 
-app.delete('/api/data/:id', (req, res) => {
-    const book = books.find(book => book.id === parseInt(req.params.id));
-    if (!book) {
-        res.status(404).send('book not found');
+/**
+ * @swagger
+ * /api/data/{id}:
+ *  delete:
+ *    summary: Deletes an entry from mongodb
+ *    description: Deletes a book entry
+ *    parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        description: Numeric ID required
+ *        schema:
+ *          type: integer
+ *    responses:
+ *      200:
+ *        description: Data is deleted
+ */
+
+app.delete('/api/data/:id', (req, resp) => {
+    database.collection('books').deleteOne({id: parseInt(req.params.id)}, (err, result) => {
+        if (err) {
+            throw err;
+        }
+
+        resp.send('Book deleted!');
+    });
+});
+
+app.listen(8080, () => {
+  MongoClient.connect(
+    "mongodb://localhost:27017/",
+    { useNewUrlParser: true },
+    (error, result) => {
+      if (error) {
+        throw error;
+      }
+
+      database = result.db("mydatabase");
+
+      console.log("Connection successful");
     }
-
-    const index = books.indexOf(book);
-
-    books.splice(index, 1);
-
-    res.send(books);
+  );
 });
-app.listen(8080);
