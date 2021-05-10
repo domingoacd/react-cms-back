@@ -3,8 +3,9 @@ const MongoClient = require("mongodb").MongoClient;
 const app = express();
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const cors = require('cors');
 
-
+app.use(cors());
 app.use(express.json());
 let database = null;
  
