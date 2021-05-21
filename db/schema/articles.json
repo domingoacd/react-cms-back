@@ -1,0 +1,15 @@
+{
+    "_id": {
+        "$oid": "609bf584099f84173c1cf859"
+    },
+    "title": "Consectetur ut consectetur ea adipisicing amet veniam velit officia minim.",
+    "image": "newsImage.png",
+    "url": "/",
+    "network": "test net",
+    "time": "01:00",
+    "date": "0/0/0",
+    "interactions": {
+        "likes": "0",
+        "dislikes": "0"
+    }
+}

@@ -6,8 +6,8 @@ const initDb = require('./db').initDb;
 
 const app = express();
 
-app.use(CONFIG.API.PREFIX, routes());
 app.use(cors());
 app.use(express.json());
+app.use(CONFIG.API.PREFIX, routes());
 
 app.listen(CONFIG.PORT, initDb);

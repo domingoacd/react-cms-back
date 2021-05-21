@@ -6,5 +6,8 @@ module.exports = Object.freeze({
     DB: {
         NAME: 'newsAppDb',
         URL: 'mongodb://localhost:27017',
+        TABLES: {
+            articles: 'articles'
+        }
     }
 });
